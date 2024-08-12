@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  pid           String
+  itemId        String
+  listingId     String
+  brand         String
+  title         String
+  subTitle      String?
+  url           String
+  badge         String?
+  stock         String
+  highlights    String[] @default([])
+  mrp           Int
+  price         Int
+  averageRating Float
+  ratingCount   Int
+  reviewCount   Int
+  images        String[] @default([])
+
+  cartItems CartItem[]
+}
+
+model User {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String    @unique
+  password String
+  cart     Cart?
+  history  History[]
+}
+
+model Cart {
+  id      String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId  String     @unique
+  user    User       @relation(fields: [userId], references: [id])
+  items   CartItem[]
+  history History[]
+}
+
+model CartItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id])
+}
+
+model History {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  cartId      String
+  cart        Cart          @relation(fields: [cartId], references: [id])
+  items       HistoryItem[]
+  totalAmount Int
+  processedAt DateTime      @default(now())
+}
+
+model HistoryItem {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String
+  productTitle    String
+  quantity        Int
+  priceAtPurchase Int
+  historyId       String
+  history         History @relation(fields: [historyId], references: [id])
+}
