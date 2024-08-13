@@ -15,15 +15,10 @@ datasource db {
 
 model Product {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  pid           String
-  itemId        String
-  listingId     String
+  category      String
   brand         String
   title         String
   subTitle      String?
-  url           String
-  badge         String?
-  stock         String
   highlights    String[] @default([])
   mrp           Int
   price         Int

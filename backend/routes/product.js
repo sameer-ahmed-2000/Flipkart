@@ -1,61 +1,69 @@
 const express = require('express');
 const router = express.Router();
-const zod=require("zod");
+const zod = require("zod");
 require('dotenv').config();
-const jwt= require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const signupSchema=zod.object({
-    username: zod.string().email(),
-    fullName: zod.string(),
-    password: zod.string(),
-    
-})
+//Zod schema for validation
+const productSchema = zod.object({
+    category: zod.string(),
+    brand: zod.string(),
+    title: zod.string(),
+    subTitle: zod.string().optional(),
+    highlights: zod.array(zod.string()).optional(),
+    mrp: zod.number(),
+    price: zod.number(),
+    averageRating: zod.number(),
+    ratingCount: zod.number(),
+    reviewCount: zod.number(),
+    images: zod.array(zod.string()).optional(),
+});
 
-router.post('/signup',async (req,res)=>{
+router.post('/item', async (req, res) => {
     try {
-        const body=req.body;
-        const {success,error}=signupSchema.safeParse(body);
-        if (!success) {
+        const body = req.body;
+
+        // Validation for the input with Zod schema
+        const result = productSchema.safeParse(body);
+        if (!result.success) {
             return res.status(400).json({
-                message: "Incorrect inputs",
-                errors: error.issues
+                message: "Invalid input data",
+                errors: result.error.issues,
             });
         }
-        const existingUser = await prisma.user.findFirst({
-            where: {
-                email: body.email
-            }
-        })
-        if (existingUser) {
-            c.status(409)
-            return c.json({
-                message: "Email is already taken"
 
-            })
-        }
-        const hashedPassword = await hashPassword(body.password);
-        const user = await prisma.user.create({
-
+        // Creating the product in the database
+        const product = await prisma.product.create({
             data: {
-                name: body.name,
-                email: body.email,
-                password: hashedPassword,
-            }
+                category: body.category,
+                brand: body.brand,
+                title: body.title,
+                subTitle: body.subTitle,
+                highlights: body.highlights || [],
+                mrp: body.mrp,
+                price: body.price,
+                averageRating: body.averageRating,
+                ratingCount: body.ratingCount,
+                reviewCount: body.reviewCount,
+                images: body.images || [],
+            },
+        });
 
-        })
-        const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-        return c.json({ id: user.id, jwt });
+        res.status(201).json({
+            message: "Product created successfully",
+            product,
+        });
     } catch (error) {
-        res.status(500);
-        return res.json({
-            message:'Internal server error',error
-        })
-    } finally{
-        prisma.$disconnect()
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message,
+        });
+    } finally {
+        prisma.$disconnect();
     }
-})
+});
 
-module.exports= router;
+module.exports = router;
