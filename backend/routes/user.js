@@ -98,21 +98,21 @@ router.post('/signin', async (req, res) => {
             });
         }
 
-        // Check if the user exists and verify the password
         const user = await prisma.user.findFirst({
             where: { email: body.email }
         });
+
         if (!user || !(await verifyPassword(body.password, user.password))) {
             return res.status(401).json({
                 message: "Invalid Email or Password"
             });
         }
 
-        // Generate a JWT token for the user
-        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        // Generate a JWT token for the user with 'userId' key
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET);
 
         // Respond with the user ID and token
-        return res.json({ id: user.id, token });
+        return res.json({ userId: user.id, token });
 
     } catch (error) {
         return res.status(500).json({
@@ -123,5 +123,6 @@ router.post('/signin', async (req, res) => {
         await prisma.$disconnect();
     }
 });
+
 
 module.exports = router;
