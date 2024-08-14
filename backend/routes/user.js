@@ -5,6 +5,7 @@ require('dotenv').config();
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
+const { authMiddleware } = require('../middleware');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const prisma = new PrismaClient();
@@ -124,5 +125,26 @@ router.post('/signin', async (req, res) => {
     }
 });
 
+router.get('/username', authMiddleware, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.userId },
+            select: { name: true }, // Only select the username field
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ username: user.name });
+    } catch (error) {
+        res.status(500).json({
+            message: 'Internal server error',
+            error: error.message,
+        });
+    } finally {
+        prisma.$disconnect();
+    }
+});
 
 module.exports = router;
