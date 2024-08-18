@@ -106,7 +106,7 @@ function Layout({ children }: LayoutProps) {
                         Flipkart
                     </button>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center px-12">
                     <div className="pt-2 px-4 text-3xl font-bold text-white">
                         {username}
                     </div>
@@ -140,8 +140,8 @@ function Layout({ children }: LayoutProps) {
                     <div px-2 pt-1>
                         <button className="static rounded-full" onClick={handleLogout}>
                             <svg
-                                width="44px"
-                                height="46px"
+                                width="50px"
+                                height="50px"
                                 viewBox="0 -0.5 25 25"
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
