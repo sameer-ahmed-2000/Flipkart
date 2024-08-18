@@ -43,7 +43,7 @@ export const fetchCartDetails = createAsyncThunk(
             throw new Error("No token found");
         }
         const response = await axios.get(
-            "http://localhost:3000/api/v1/product/cart/details",
+            "https://flipkart-d29x1.vercel.app/api/v1/product/cart/details",
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -65,7 +65,7 @@ export const checkoutCart = createAsyncThunk(
 
         try {
             const response = await axios.post(
-                "http://localhost:3000/api/v1/product/cart/checkout",
+                "https://flipkart-d29x1.vercel.app/api/v1/product/cart/checkout",
                 {},
                 {
                     headers: {
@@ -91,7 +91,7 @@ export const addProductToCart = createAsyncThunk(
             throw new Error("No token found");
         }
         const response = await axios.post(
-            `http://localhost:3000/api/v1/product/cart/add/${productId}`,
+            `https://flipkart-d29x1.vercel.app/api/v1/product/cart/add/${productId}`,
             {},
             {
                 headers: {
@@ -110,7 +110,7 @@ export const updateCartItem = createAsyncThunk(
             throw new Error("No token found");
         }
         const response = await axios.put(
-            `http://localhost:3000/api/v1/product/cart/update/${productId}`,
+            `https://flipkart-d29x1.vercel.app/api/v1/product/cart/update/${productId}`,
             { quantity },
             {
                 headers: {
@@ -129,7 +129,7 @@ export const removeProductFromCart = createAsyncThunk(
             throw new Error("No token found");
         }
         await axios.delete(
-            `http://localhost:3000/api/v1/product/cart/remove/${productId}`,
+            `https://flipkart-d29x1.vercel.app/api/v1/product/cart/remove/${productId}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

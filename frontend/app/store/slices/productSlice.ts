@@ -40,7 +40,7 @@ export const fetchProducts = createAsyncThunk(
     "products/fetchProducts",
     async (page: number) => {
         const response = await axios.get(
-            `http://localhost:3000/api/v1/product/items?page=${page}`,
+            `https://flipkart-d29x1.vercel.app/api/v1/product/items?page=${page}`,
         );
         return response.data;
     },
@@ -50,7 +50,7 @@ export const fetchProductById = createAsyncThunk(
     "products/fetchProductById",
     async (productId: string) => {
         const response = await axios.get(
-            `http://localhost:3000/api/v1/product/item/${productId}`,
+            `https://flipkart-d29x1.vercel.app/api/v1/product/item/${productId}`,
         );
         return response.data;
     },

@@ -48,7 +48,7 @@ export const fetchUserHistory = createAsyncThunk<UserHistory[]>(
             throw new Error("No token found");
         }
         const response = await axios.get(
-            "http://localhost:3000/api/v1/user/history",
+            "https://flipkart-d29x1.vercel.app/api/v1/user/history",
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -66,7 +66,7 @@ export const fetchUsername = createAsyncThunk<string>(
             throw new Error("No token found");
         }
         const response = await axios.get(
-            "http://localhost:3000/api/v1/user/username",
+            "https://flipkart-d29x1.vercel.app/api/v1/user/username",
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
