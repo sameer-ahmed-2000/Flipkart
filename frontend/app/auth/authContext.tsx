@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-
+import Cookies from 'js-cookie';
+import { cookies } from "next/headers";
 // Define the shape of the authentication context
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -27,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Check for token in localStorage on initial render
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = Cookies.get("token");
     if (token) {
       setIsAuthenticated(true);
     }
@@ -36,13 +37,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Handle login by setting token and updating authentication state
   const login = (token: string) => {
-    localStorage.setItem("token", token);
+    Cookies.set('token', token, { expires: 7, secure: true, sameSite: 'Strict' });
     setIsAuthenticated(true);
   };
 
   // Handle logout by removing token and updating authentication state
   const logout = () => {
-    localStorage.removeItem("token");
+    Cookies.remove("token");
     setIsAuthenticated(false);
   };
 

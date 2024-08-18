@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { RootState } from "../store";
-
+import Cookies from 'js-cookie';
 type Status = "idle" | "loading" | "succeeded" | "failed";
 
 interface HistoryItem {
@@ -39,7 +39,7 @@ const initialState: UserState = {
 };
 
 // Async Thunks
-const token = localStorage.getItem("token");
+const token = Cookies.get("token");
 
 export const fetchUserHistory = createAsyncThunk<UserHistory[]>(
     "user/fetchUserHistory",

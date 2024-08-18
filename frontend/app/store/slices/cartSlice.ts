@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { RootState } from "../store";
+import Cookies from 'js-cookie';
 type Status = "idle" | "loading" | "succeeded" | "failed";
 type CheckoutStatus = "idle" | "loading" | "succeeded" | "failed";
 interface CartItem {
@@ -35,7 +36,7 @@ const initialState: CartState = {
     checkoutStatus: "idle",
 };
 
-const token = localStorage.getItem("token");
+const token = Cookies.get("token");
 export const fetchCartDetails = createAsyncThunk(
     "cart/fetchCartDetails",
     async () => {
