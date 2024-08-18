@@ -146,5 +146,27 @@ router.get('/username', authMiddleware, async (req, res) => {
         prisma.$disconnect();
     }
 });
+router.get('/history', authMiddleware, async (req, res) => {
+    try {
+        // Fetch the history records for the logged-in user
+        const history = await prisma.history.findMany({
+            where: { userId: req.userId },
+            include: {
+                items: true, // Include the associated HistoryItem records
+            },
+            orderBy: { processedAt: 'desc' }, // Order by most recent purchases
+        });
+
+        if (history.length === 0) {
+            return res.status(404).json({ message: 'No purchase history found' });
+        }
+
+        res.status(200).json(history);
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    } finally {
+        prisma.$disconnect();
+    }
+});
 
 module.exports = router;
