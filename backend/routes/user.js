@@ -10,24 +10,21 @@ const { authMiddleware } = require('../middleware');
 const JWT_SECRET = process.env.JWT_SECRET;
 const prisma = new PrismaClient();
 
-// Zod schema for validating signup inputs
+
 const signupSchema = zod.object({
     name: zod.string(),
     email: zod.string().email(),
     password: zod.string(),
 });
 
-// Function to hash passwords using bcrypt
 async function hashPassword(password) {
     return bcrypt.hash(password, 10);
 }
 
-// Route to handle user signup
+
 router.post('/signup', async (req, res) => {
     try {
         const body = req.body;
-
-        // Validate input using Zod schema
         const validation = signupSchema.safeParse(body);
         if (!validation.success) {
             return res.status(400).json({
@@ -35,8 +32,6 @@ router.post('/signup', async (req, res) => {
                 errors: validation.error.issues
             });
         }
-
-        // Check if the user already exists
         const existingUser = await prisma.user.findFirst({
             where: { email: body.email }
         });
@@ -46,10 +41,7 @@ router.post('/signup', async (req, res) => {
             });
         }
 
-        // Hash the user's password
         const hashedPassword = await hashPassword(body.password);
-
-        // Create the new user
         const user = await prisma.user.create({
             data: {
                 name: body.name,
@@ -57,11 +49,7 @@ router.post('/signup', async (req, res) => {
                 password: hashedPassword,
             }
         });
-
-        // Generate a JWT token for the user
         const token = jwt.sign({ id: user.id }, JWT_SECRET);
-
-        // Respond with the user ID and token
         return res.json({ id: user.id, token });
 
     } catch (error) {
@@ -74,23 +62,18 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-// Zod schema for validating signin inputs
 const signinSchema = zod.object({
     email: zod.string().email(),
     password: zod.string(),
 });
 
-// Function to verify a password using bcrypt
 async function verifyPassword(plainPassword, hashedPassword) {
     return bcrypt.compare(plainPassword, hashedPassword);
 }
 
-// Route to handle user signin
 router.post('/signin', async (req, res) => {
     try {
         const body = req.body;
-
-        // Validate input using Zod schema
         const validation = signinSchema.safeParse(body);
         if (!validation.success) {
             return res.status(400).json({
@@ -109,10 +92,7 @@ router.post('/signin', async (req, res) => {
             });
         }
 
-        // Generate a JWT token for the user with 'userId' key
         const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-
-        // Respond with the user ID and token
         return res.json({ userId: user.id, token });
 
     } catch (error) {
@@ -129,7 +109,7 @@ router.get('/username', authMiddleware, async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.userId },
-            select: { name: true }, // Only select the username field
+            select: { name: true },
         });
 
         if (!user) {
@@ -148,13 +128,12 @@ router.get('/username', authMiddleware, async (req, res) => {
 });
 router.get('/history', authMiddleware, async (req, res) => {
     try {
-        // Fetch the history records for the logged-in user
         const history = await prisma.history.findMany({
             where: { userId: req.userId },
             include: {
-                items: true, // Include the associated HistoryItem records
+                items: true,
             },
-            orderBy: { processedAt: 'desc' }, // Order by most recent purchases
+            orderBy: { processedAt: 'desc' },
         });
 
         if (history.length === 0) {

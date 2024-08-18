@@ -2,13 +2,10 @@ const express = require('express');
 const router = express.Router();
 const zod = require("zod");
 require('dotenv').config();
-const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET;
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware } = require('../middleware');
 const prisma = new PrismaClient();
 
-//Zod schema for validation
 const productSchema = zod.object({
     category: zod.string(),
     brand: zod.string(),
@@ -26,8 +23,6 @@ const productSchema = zod.object({
 router.post('/item', async (req, res) => {
     try {
         const body = req.body;
-
-        // Validation for the input with Zod schema
         const result = productSchema.safeParse(body);
         if (!result.success) {
             return res.status(400).json({
@@ -35,8 +30,6 @@ router.post('/item', async (req, res) => {
                 errors: result.error.issues,
             });
         }
-
-        // Creating the product in the database
         const product = await prisma.product.create({
             data: {
                 category: body.category,
@@ -66,28 +59,20 @@ router.post('/item', async (req, res) => {
         prisma.$disconnect();
     }
 });
-
-// GET all products
 router.get('/items', async (req, res) => {
     try {
-        // Get pagination parameters from query
-        const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-        const limit = 10; // Number of items per page
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
 
         if (page < 1) {
             return res.status(400).json({ message: "Page number must be 1 or higher" });
         }
-
-        // Calculate the offset
         const offset = (page - 1) * limit;
-
-        // Fetch products with pagination
         const products = await prisma.product.findMany({
             skip: offset,
             take: limit,
         });
-
-        // Calculate the discount percentage for each product
         const productsWithDiscount = products.map(product => {
             const discountPercentage = Math.round(((product.mrp - product.price) / product.mrp) * 100);
             return {
@@ -95,8 +80,6 @@ router.get('/items', async (req, res) => {
                 discountPercentage: `${discountPercentage}% Off`,
             };
         });
-
-        // Get total number of products for pagination info
         const totalProducts = await prisma.product.count();
 
         res.status(200).json({
@@ -114,9 +97,6 @@ router.get('/items', async (req, res) => {
         prisma.$disconnect();
     }
 });
-
-
-// GET a specific product by ID
 router.get('/item/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -129,8 +109,6 @@ router.get('/item/:id', async (req, res) => {
                 message: 'Product not found',
             });
         }
-
-        // Calculate the discount percentage for the specific product
         const discountPercentage = Math.round(((product.mrp - product.price) / product.mrp) * 100);
 
         const productWithDiscount = {
@@ -159,20 +137,15 @@ router.post('/cart/add/:productId', authMiddleware, async (req, res) => {
     try {
         const { productId } = req.params;
         const quantity = parseInt(req.query.quantity) || 1; // Default to 1 if not provided
-
-        // Validate quantity
         if (isNaN(quantity) || quantity < 1) {
             return res.status(400).json({ message: "Invalid quantity" });
         }
-
-        // Check if the cart exists for the user
         let cart = await prisma.cart.findUnique({
             where: { userId: req.userId },
             include: { items: true },
         });
 
         if (!cart) {
-            // If no cart exists, create a new cart for the user
             cart = await prisma.cart.create({
                 data: {
                     userId: req.userId,
@@ -185,14 +158,11 @@ router.post('/cart/add/:productId', authMiddleware, async (req, res) => {
                 },
             });
         } else {
-            // Check if the product is already in the cart
             const existingCartItem = cart.items.find(item => item.productId === productId);
 
             if (existingCartItem) {
-                // Respond with a message indicating the item is already in the cart
                 return res.status(400).json({ message: "Product already in cart" });
             } else {
-                // Add the new item to the cart
                 await prisma.cartItem.create({
                     data: {
                         productId,
@@ -214,8 +184,6 @@ router.post('/cart/add/:productId', authMiddleware, async (req, res) => {
 router.delete('/cart/remove/:productId', authMiddleware, async (req, res) => {
     try {
         const { productId } = req.params;
-
-        // Find the user's cart first
         const cart = await prisma.cart.findUnique({
             where: {
                 userId: req.userId,
@@ -228,15 +196,11 @@ router.delete('/cart/remove/:productId', authMiddleware, async (req, res) => {
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found' });
         }
-
-        // Find the cart item with the specified productId
         const cartItem = cart.items.find(item => item.productId === productId);
 
         if (!cartItem) {
             return res.status(404).json({ message: 'Item not found in cart' });
         }
-
-        // Remove the item from the cart
         await prisma.cartItem.delete({
             where: { id: cartItem.id }
         });
@@ -254,13 +218,9 @@ router.put('/cart/update/:productId', authMiddleware, async (req, res) => {
     try {
         const { productId } = req.params;
         const { quantity } = req.body;
-
-        // Validate quantity
         if (quantity == null || quantity < 0) {
             return res.status(400).json({ message: 'Quantity is required and must be a positive number' });
         }
-
-        // Find the user's cart
         const cart = await prisma.cart.findUnique({
             where: { userId: req.userId },
             include: { items: true },
@@ -269,8 +229,6 @@ router.put('/cart/update/:productId', authMiddleware, async (req, res) => {
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found' });
         }
-
-        // Find the specific cart item
         const cartItem = cart.items.find(item => item.productId === productId);
 
         if (!cartItem) {
@@ -278,13 +236,11 @@ router.put('/cart/update/:productId', authMiddleware, async (req, res) => {
         }
 
         if (quantity <= 0) {
-            // Remove the item if quantity is set to 0 or less
             await prisma.cartItem.delete({
                 where: { id: cartItem.id }
             });
             return res.status(200).json({ message: 'Item removed from cart' });
         } else {
-            // Update the quantity
             await prisma.cartItem.update({
                 where: { id: cartItem.id },
                 data: { quantity: quantity }
@@ -316,8 +272,6 @@ router.get('/cart/details', authMiddleware, async (req, res) => {
         if (!cart || cart.items.length === 0) {
             return res.status(200).json([]);
         }
-
-        // Calculate the subtotal, discount, and total, and add discount percentage to each item
         let subtotal = 0;
         const cartItemsWithDiscount = cart.items.map(item => {
             const { product } = item;
@@ -337,8 +291,8 @@ router.get('/cart/details', authMiddleware, async (req, res) => {
             };
         });
 
-        const totalItems = cart.items.length; // Number of different products
-        const total = subtotal; // Since no additional discounts are applied
+        const totalItems = cart.items.length;
+        const total = subtotal;
 
         res.status(200).json({
             items: cartItemsWithDiscount,
@@ -358,17 +312,14 @@ router.get('/cart/details', authMiddleware, async (req, res) => {
 
 router.post('/cart/checkout', authMiddleware, async (req, res) => {
     try {
-        // Fetch the cart and related items for the user
         const cart = await prisma.cart.findUnique({
             where: { userId: req.userId },
-            include: { items: { include: { product: true } } }, // Ensure we include the related Product
+            include: { items: { include: { product: true } } },
         });
 
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ message: 'Cart is empty or not found' });
         }
-
-        // Calculate total amount and create history items
         let totalAmount = 0;
         const historyItems = cart.items.map((item) => {
             if (!item.product || !item.product.price) {
@@ -385,8 +336,6 @@ router.post('/cart/checkout', authMiddleware, async (req, res) => {
                 priceAtPurchase: item.product.price,
             };
         });
-
-        // Create a history record
         const history = await prisma.history.create({
             data: {
                 userId: req.userId,
@@ -399,8 +348,6 @@ router.post('/cart/checkout', authMiddleware, async (req, res) => {
                 },
             },
         });
-
-        // Remove the items from the cart
         await prisma.cartItem.deleteMany({
             where: { cartId: cart.id },
         });
