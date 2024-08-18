@@ -72,7 +72,7 @@ router.get('/items', async (req, res) => {
     try {
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-        const limit = 9; // Number of items per page
+        const limit = 10; // Number of items per page
 
         if (page < 1) {
             return res.status(400).json({ message: "Page number must be 1 or higher" });
@@ -314,7 +314,7 @@ router.get('/cart/details', authMiddleware, async (req, res) => {
         });
 
         if (!cart || cart.items.length === 0) {
-            return res.status(404).json({ message: 'Cart is empty' });
+            return res.status(200).json([]);
         }
 
         // Calculate the subtotal, discount, and total, and add discount percentage to each item
@@ -416,28 +416,5 @@ router.post('/cart/checkout', authMiddleware, async (req, res) => {
     }
 });
 
-
-router.get('/history', authMiddleware, async (req, res) => {
-    try {
-        // Fetch the history records for the logged-in user
-        const history = await prisma.history.findMany({
-            where: { userId: req.userId },
-            include: {
-                items: true, // Include the associated HistoryItem records
-            },
-            orderBy: { processedAt: 'desc' }, // Order by most recent purchases
-        });
-
-        if (history.length === 0) {
-            return res.status(404).json({ message: 'No purchase history found' });
-        }
-
-        res.status(200).json(history);
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error', error: error.message });
-    } finally {
-        prisma.$disconnect();
-    }
-});
 
 module.exports = router;
