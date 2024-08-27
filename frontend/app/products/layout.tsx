@@ -77,7 +77,7 @@ function Layout({ children }: LayoutProps) {
     };
     return (
         <>
-            <nav className="bg-[#3074f4] h-14 flex justify-between">
+            <nav className="sm:px-10 bg-[#3074f4] h-14 flex justify-between">
                 <div className="flex">
                     <div className="pl-4 pt-2">
                         <svg
@@ -131,7 +131,7 @@ function Layout({ children }: LayoutProps) {
                                 </g>
                             </svg>
                             {cartItemsCount > 0 && (
-                                <span className="fixed -top-0 bg-red-600 text-white text-xs font-bold rounded-full px-2 py-1">
+                                <span className=" absolute top-0 bg-red-600 text-white text-xs font-bold rounded-full px-2 py-1">
                                     {cartItemsCount}
                                 </span>
                             )}
